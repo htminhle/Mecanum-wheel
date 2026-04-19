@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mecanum Wheels — FTC Robotics</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #12151c;
+    --surface2: #1a1e28;
+    --border: #2a2f3d;
+    --accent: #00e5ff;
+    --accent2: #ff4d6d;
+    --accent3: #7fff6e;
+    --gold: #ffd166;
+    --text: #e8eaf0;
+    --muted: #6b7494;
+    --fw: forward;
+    --bk: reverse;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘DM Sans’, sans-serif;
+font-size: 16px;
+line-height: 1.6;
+overflow-x: hidden;
+}
+
+/* ─── Grid bg ─── */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image:
+linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+background-size: 40px 40px;
+pointer-events: none;
+z-index: 0;
+}
+
+/* ─── Nav ─── */
+nav {
+position: fixed;
+top: 0; left: 0; right: 0;
+z-index: 100;
+background: rgba(10,12,16,0.85);
+backdrop-filter: blur(12px);
+border-bottom: 1px solid var(–border);
+padding: 0 2rem;
+height: 56px;
+display: flex;
+align-items: center;
+gap: 2rem;
+}
+.nav-logo {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 1.4rem;
+letter-spacing: 2px;
+color: var(–accent);
+}
+.nav-links { display: flex; gap: 1.5rem; margin-left: auto; }
+.nav-links a {
+font-family: ‘Space Mono’, monospace;
+font-size: 0.7rem;
+letter-spacing: 1px;
+color: var(–muted);
+text-decoration: none;
+text-transform: uppercase;
+transition: color 0.2s;
+}
+.nav-links a:hover { color: var(–accent); }
+
+/* ─── Hero ─── */
+.hero {
+position: relative;
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+text-align: center;
+padding: 7rem 2rem 4rem;
+z-index: 1;
+}
+.hero-eyebrow {
+font-family: ‘Space Mono’, monospace;
+font-size: 0.72rem;
+letter-spacing: 4px;
+color: var(–accent);
+text-transform: uppercase;
+margin-bottom: 1.2rem;
+opacity: 0;
+animation: fadeUp 0.6s 0.2s forwards;
+}
+.hero-title {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: clamp(4rem, 12vw, 9rem);
+line-height: 0.9;
+letter-spacing: 2px;
+margin-bottom: 1.5rem;
+opacity: 0;
+animation: fadeUp 0.7s 0.35s forwards;
+}
+.hero-title span { color: var(–accent); }
+.hero-sub {
+max-width: 600px;
+color: var(–muted);
+font-size: 1.05rem;
+margin-bottom: 2.5rem;
+opacity: 0;
+animation: fadeUp 0.7s 0.5s forwards;
+}
+.hero-cta {
+display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+opacity: 0;
+animation: fadeUp 0.7s 0.65s forwards;
+}
+.btn {
+padding: 0.75rem 1.8rem;
+border-radius: 4px;
+font-family: ‘Space Mono’, monospace;
+font-size: 0.78rem;
+letter-spacing: 1px;
+text-transform: uppercase;
+cursor: pointer;
+border: none;
+text-decoration: none;
+transition: transform 0.15s, box-shadow 0.15s;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn-primary {
+background: var(–accent);
+color: #000;
+box-shadow: 0 0 20px rgba(0,229,255,0.3);
+}
+.btn-secondary {
+background: transparent;
+color: var(–text);
+border: 1px solid var(–border);
+}
+.btn-secondary:hover { border-color: var(–accent); color: var(–accent); }
+
+/* spinning wheel decoration */
+.wheel-deco {
+position: absolute;
+width: 360px; height: 360px;
+border-radius: 50%;
+border: 2px dashed rgba(0,229,255,0.12);
+animation: spin 30s linear infinite;
+pointer-events: none;
+}
+.wheel-deco::before {
+content: ‘’;
+position: absolute;
+inset: 30px;
+border-radius: 50%;
+border: 1px solid rgba(0,229,255,0.06);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Sections ─── */
+section {
+position: relative;
+z-index: 1;
+padding: 5rem 2rem;
+max-width: 1100px;
+margin: 0 auto;
+}
+.section-tag {
+font-family: ‘Space Mono’, monospace;
+font-size: 0.68rem;
+letter-spacing: 3px;
+color: var(–accent);
+text-transform: uppercase;
+margin-bottom: 0.5rem;
+display: block;
+}
+h2 {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: clamp(2.2rem, 5vw, 3.5rem);
+letter-spacing: 1px;
+line-height: 1;
+margin-bottom: 1.5rem;
+}
+p { color: var(–muted); margin-bottom: 1rem; }
+strong { color: var(–text); }
+
+/* ─── Physics Section ─── */
+.physics-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 2rem;
+margin-top: 2.5rem;
+}
+@media(max-width:700px){ .physics-grid { grid-template-columns: 1fr; } }
+
+.card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 8px;
+padding: 1.8rem;
+transition: border-color 0.2s, transform 0.2s;
+}
+.card:hover { border-color: var(–accent); transform: translateY(-3px); }
+.card-icon { font-size: 2rem; margin-bottom: 0.8rem; }
+.card h3 {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 1.4rem;
+letter-spacing: 1px;
+margin-bottom: 0.5rem;
+color: var(–text);
+}
+
+/* ─── Interactive Simulator ─── */
+#simulator {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 2.5rem;
+margin-top: 2.5rem;
+}
+.sim-layout {
+display: grid;
+grid-template-columns: 1fr 1.2fr;
+gap: 2rem;
+align-items: start;
+}
+@media(max-width:800px){ .sim-layout { grid-template-columns: 1fr; } }
+
+.movement-btns {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 0.6rem;
+margin-bottom: 1.5rem;
+}
+.mv-btn {
+padding: 0.7rem 0;
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: 6px;
+color: var(–text);
+font-family: ‘Space Mono’, monospace;
+font-size: 0.65rem;
+letter-spacing: 1px;
+cursor: pointer;
+text-transform: uppercase;
+transition: all 0.15s;
+}
+.mv-btn:hover { border-color: var(–accent); color: var(–accent); }
+.mv-btn.active {
+background: var(–accent);
+color: #000;
+border-color: var(–accent);
+box-shadow: 0 0 14px rgba(0,229,255,0.35);
+}
+.mv-btn.spacer { visibility: hidden; }
+
+/* Robot canvas */
+#robotCanvas {
+width: 100%;
+border-radius: 8px;
+border: 1px solid var(–border);
+background: var(–bg);
+display: block;
+}
+
+/* Motor indicators */
+.motors-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 0.8rem;
+margin-top: 1rem;
+}
+.motor-card {
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: 6px;
+padding: 0.8rem 1rem;
+}
+.motor-label {
+font-family: ‘Space Mono’, monospace;
+font-size: 0.65rem;
+color: var(–muted);
+letter-spacing: 1px;
+text-transform: uppercase;
+margin-bottom: 0.4rem;
+}
+.motor-bar-wrap {
+background: var(–bg);
+border-radius: 100px;
+height: 8px;
+position: relative;
+overflow: visible;
+}
+.motor-bar {
+height: 8px;
+border-radius: 100px;
+transition: width 0.35s ease, background 0.35s;
+position: absolute;
+}
+.motor-val {
+font-family: ‘Space Mono’, monospace;
+font-size: 0.75rem;
+margin-top: 4px;
+}
+
+/* ─── Movement Matrix Table ─── */
+.matrix-wrap {
+overflow-x: auto;
+margin-top: 2rem;
+}
+table {
+width: 100%;
+border-collapse: collapse;
+font-family: ‘Space Mono’, monospace;
+font-size: 0.78rem;
+}
+th {
+background: var(–surface2);
+color: var(–accent);
+padding: 0.9rem 1rem;
+text-align: left;
+letter-spacing: 1px;
+border-bottom: 2px solid var(–border);
+white-space: nowrap;
+}
+td {
+padding: 0.75rem 1rem;
+border-bottom: 1px solid var(–border);
+vertical-align: middle;
+}
+tr:hover td { background: rgba(255,255,255,0.02); }
+.dir-cell { color: var(–text); font-weight: 700; }
+.fwd { color: var(–accent3); }
+.rev { color: var(–accent2); }
+
+/* ─── X Pattern Section ─── */
+.x-pattern-visual {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 3rem;
+margin: 2.5rem 0;
+flex-wrap: wrap;
+}
+.pattern-box {
+text-align: center;
+}
+.pattern-box canvas {
+border-radius: 8px;
+border: 1px solid var(–border);
+}
+.pattern-label {
+margin-top: 0.8rem;
+font-family: ‘Space Mono’, monospace;
+font-size: 0.72rem;
+letter-spacing: 2px;
+}
+.label-good { color: var(–accent3); }
+.label-bad  { color: var(–accent2); }
+
+/* ─── Pros/Cons ─── */
+.pros-cons-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 1.5rem;
+margin-top: 2rem;
+}
+@media(max-width:600px){ .pros-cons-grid { grid-template-columns: 1fr; } }
+
+.pc-card {
+background: var(–surface);
+border-radius: 8px;
+padding: 1.8rem;
+border-top: 3px solid transparent;
+}
+.pc-card.pros { border-top-color: var(–accent3); }
+.pc-card.cons { border-top-color: var(–accent2); }
+.pc-card h3 {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 1.6rem;
+margin-bottom: 1rem;
+}
+.pc-card.pros h3 { color: var(–accent3); }
+.pc-card.cons h3 { color: var(–accent2); }
+.pc-list { list-style: none; }
+.pc-list li {
+padding: 0.5rem 0;
+border-bottom: 1px solid var(–border);
+color: var(–muted);
+font-size: 0.9rem;
+display: flex;
+gap: 0.6rem;
+align-items: flex-start;
+}
+.pc-list li:last-child { border-bottom: none; }
+.pc-list li span:first-child { flex-shrink: 0; margin-top: 2px; }
+
+/* ─── Hardware Tips ─── */
+.tips-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+gap: 1.2rem;
+margin-top: 2rem;
+}
+.tip-card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 8px;
+padding: 1.5rem;
+}
+.tip-card h4 {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 1.1rem;
+letter-spacing: 1px;
+color: var(–gold);
+margin-bottom: 0.5rem;
+}
+.tip-card p { font-size: 0.88rem; margin: 0; }
+
+/* ─── Code Section ─── */
+.code-block {
+background: var(–bg);
+border: 1px solid var(–border);
+border-radius: 8px;
+padding: 2rem;
+margin-top: 1.5rem;
+overflow-x: auto;
+position: relative;
+}
+.code-block pre {
+font-family: ‘Space Mono’, monospace;
+font-size: 0.82rem;
+line-height: 1.8;
+color: var(–text);
+}
+.kw  { color: #ff79c6; }
+.fn  { color: #50fa7b; }
+.cm  { color: #6272a4; }
+.vr  { color: var(–accent); }
+.nm  { color: var(–gold); }
+.op  { color: #ff5555; }
+
+/* ─── Interactive code slider ─── */
+.formula-demo {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 8px;
+padding: 2rem;
+margin-top: 1.5rem;
+}
+.slider-row {
+display: flex;
+align-items: center;
+gap: 1rem;
+margin-bottom: 1rem;
+}
+.slider-row label {
+font-family: ‘Space Mono’, monospace;
+font-size: 0.72rem;
+letter-spacing: 1px;
+color: var(–accent);
+text-transform: uppercase;
+width: 90px;
+flex-shrink: 0;
+}
+input[type=range] {
+flex: 1;
+accent-color: var(–accent);
+cursor: pointer;
+}
+.slider-val {
+font-family: ‘Space Mono’, monospace;
+font-size: 0.8rem;
+color: var(–text);
+width: 50px;
+text-align: right;
+}
+.formula-result {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 0.8rem;
+margin-top: 1.5rem;
+}
+.result-motor {
+background: var(–bg);
+border: 1px solid var(–border);
+border-radius: 6px;
+padding: 0.8rem 1rem;
+}
+.result-motor .label {
+font-family: ‘Space Mono’, monospace;
+font-size: 0.65rem;
+color: var(–muted);
+letter-spacing: 1px;
+text-transform: uppercase;
+margin-bottom: 0.3rem;
+}
+.result-motor .val {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 1.8rem;
+letter-spacing: 1px;
+}
+
+/* ─── Footer ─── */
+footer {
+text-align: center;
+padding: 3rem 2rem;
+border-top: 1px solid var(–border);
+color: var(–muted);
+font-family: ‘Space Mono’, monospace;
+font-size: 0.7rem;
+letter-spacing: 2px;
+position: relative;
+z-index: 1;
+}
+
+/* ─── Animations ─── */
+@keyframes fadeUp {
+from { opacity: 0; transform: translateY(20px); }
+to   { opacity: 1; transform: translateY(0); }
+}
+.reveal {
+opacity: 0;
+transform: translateY(24px);
+transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible {
+opacity: 1;
+transform: translateY(0);
+}
+
+/* section dividers */
+.divider {
+border: none;
+border-top: 1px solid var(–border);
+margin: 0;
+position: relative;
+z-index: 1;
+}
+
+/* info highlight */
+.highlight {
+background: rgba(0,229,255,0.07);
+border-left: 3px solid var(–accent);
+border-radius: 0 6px 6px 0;
+padding: 1rem 1.2rem;
+margin: 1.5rem 0;
+color: var(–text);
+font-size: 0.95rem;
+}
+</style>
+
+</head>
+<body>
+
+<!-- NAV -->
+
+<nav>
+  <span class="nav-logo">🛞 MECANUM</span>
+  <div class="nav-links">
+    <a href="#physics">Physics</a>
+    <a href="#simulator">Simulator</a>
+    <a href="#matrix">Matrix</a>
+    <a href="#xpattern">X-Pattern</a>
+    <a href="#proscons">Pros/Cons</a>
+    <a href="#code">Code</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+
+<div class="hero">
+  <div class="wheel-deco"></div>
+  <div class="hero-eyebrow">FTC Robotics — Drive Systems</div>
+  <h1 class="hero-title">MECANUM<br><span>WHEELS</span></h1>
+  <p class="hero-sub">The science of omnidirectional movement — understand the physics, master the matrix, and code the perfect drive.</p>
+  <div class="hero-cta">
+    <a href="#simulator" class="btn btn-primary">Try Simulator</a>
+    <a href="#physics" class="btn btn-secondary">Learn Physics</a>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- PHYSICS -->
+
+<section id="physics">
+  <span class="section-tag">Section 01</span>
+  <h2>Vector Physics</h2>
+  <p>Unlike standard wheels that push only forward/backward, Mecanum wheels have <strong>rollers mounted at 45°</strong> to the wheel's plane — turning a simple rotation into a diagonal thrust vector.</p>
+  <div class="highlight">
+    🔑 By spinning four wheels in different combinations, these 45° vectors <strong>cancel in some directions</strong> and <strong>add together in others</strong> — producing movement in any direction.
+  </div>
+  <div class="physics-grid reveal">
+    <div class="card">
+      <div class="card-icon">↗️</div>
+      <h3>45° Force Vectors</h3>
+      <p>Each roller on a Mecanum wheel exerts force at a 45-degree angle relative to the robot's axis. This is the fundamental building block of omnidirectional movement.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">➕</div>
+      <h3>Vector Addition</h3>
+      <p>When all four wheels spin forward, their 45° side-components cancel out (left vs right), and only forward thrust remains — that's how straight movement emerges from diagonal forces.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">↔️</div>
+      <h3>Strafing</h3>
+      <p>For sideways movement, wheels spin in a pattern that cancels forward/backward components while the lateral (side) components all add together — pure sideways thrust with zero turning.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔄</div>
+      <h3>Rotation</h3>
+      <p>For turning, left-side wheels push one direction while right-side wheels push the opposite — creating a rotating torque around the robot's center with zero linear motion.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- SIMULATOR -->
+
+<section id="simulator">
+  <span class="section-tag">Section 02</span>
+  <h2>Interactive Simulator</h2>
+  <p>Press a movement button to see the robot animate and watch each motor's direction and power level update in real time.</p>
+
+  <div id="simulator" style="margin-top:0">
+    <div class="sim-layout">
+      <div>
+        <div class="movement-btns" id="mvBtns">
+          <button class="mv-btn spacer">·</button>
+          <button class="mv-btn" data-move="forward">▲ Forward</button>
+          <button class="mv-btn spacer">·</button>
+          <button class="mv-btn" data-move="strafe_left">◄ Strafe L</button>
+          <button class="mv-btn" data-move="stop">■ Stop</button>
+          <button class="mv-btn" data-move="strafe_right">Strafe R ►</button>
+          <button class="mv-btn" data-move="turn_left">↺ Turn L</button>
+          <button class="mv-btn" data-move="backward">▼ Back</button>
+          <button class="mv-btn" data-move="turn_right">Turn R ↻</button>
+        </div>
+        <div class="motors-grid" id="motorDisplay"></div>
+      </div>
+      <div>
+        <canvas id="robotCanvas" width="360" height="360"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- MOVEMENT MATRIX -->
+
+<section id="matrix">
+  <span class="section-tag">Section 03</span>
+  <h2>Movement Matrix</h2>
+  <p>This is the essential reference every FTC programmer needs memorized. Each row shows which wheels spin forward (▶) or reverse (◀) to achieve the desired movement.</p>
+  <div class="matrix-wrap reveal">
+    <table>
+      <thead>
+        <tr>
+          <th>Desired Movement</th>
+          <th>Front Left</th>
+          <th>Front Right</th>
+          <th>Back Left</th>
+          <th>Back Right</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="dir-cell">⬆ Forward</td>
+          <td class="fwd">▶ Forward</td>
+          <td class="fwd">▶ Forward</td>
+          <td class="fwd">▶ Forward</td>
+          <td class="fwd">▶ Forward</td>
+        </tr>
+        <tr>
+          <td class="dir-cell">⬇ Backward</td>
+          <td class="rev">◀ Reverse</td>
+          <td class="rev">◀ Reverse</td>
+          <td class="rev">◀ Reverse</td>
+          <td class="rev">◀ Reverse</td>
+        </tr>
+        <tr>
+          <td class="dir-cell">⬅ Strafe Left</td>
+          <td class="rev">◀ Reverse</td>
+          <td class="fwd">▶ Forward</td>
+          <td class="fwd">▶ Forward</td>
+          <td class="rev">◀ Reverse</td>
+        </tr>
+        <tr>
+          <td class="dir-cell">➡ Strafe Right</td>
+          <td class="fwd">▶ Forward</td>
+          <td class="rev">◀ Reverse</td>
+          <td class="rev">◀ Reverse</td>
+          <td class="fwd">▶ Forward</td>
+        </tr>
+        <tr>
+          <td class="dir-cell">↺ Turn Left</td>
+          <td class="rev">◀ Reverse</td>
+          <td class="fwd">▶ Forward</td>
+          <td class="rev">◀ Reverse</td>
+          <td class="fwd">▶ Forward</td>
+        </tr>
+        <tr>
+          <td class="dir-cell">↻ Turn Right</td>
+          <td class="fwd">▶ Forward</td>
+          <td class="rev">◀ Reverse</td>
+          <td class="fwd">▶ Forward</td>
+          <td class="rev">◀ Reverse</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- X PATTERN -->
+
+<section id="xpattern">
+  <span class="section-tag">Section 04</span>
+  <h2>The Golden Rule: X-Pattern</h2>
+  <p>This is the <strong>most common mistake</strong> for rookie teams. The wheels must be mounted so that the rollers form an <strong>"X" when viewed from above</strong>.</p>
+
+  <div class="x-pattern-visual reveal">
+    <div class="pattern-box">
+      <canvas id="xCanvas" width="200" height="200"></canvas>
+      <div class="pattern-label label-good">✓ CORRECT — "X" Pattern</div>
+    </div>
+    <div class="pattern-box">
+      <canvas id="oCanvas" width="200" height="200"></canvas>
+      <div class="pattern-label label-bad">✗ WRONG — "O" Pattern</div>
+    </div>
+  </div>
+
+  <div class="physics-grid reveal">
+    <div class="card">
+      <div class="card-icon">✅</div>
+      <h3>X Pattern (Correct)</h3>
+      <p><strong>Left wheels</strong> use "Left" rollers. <strong>Right wheels</strong> use "Right" rollers. When viewed from above, the top rollers of all 4 wheels point <strong>toward the center</strong> of the robot, forming an X.</p>
+    </div>
+    <div class="card" style="border-color: rgba(255,77,109,0.3)">
+      <div class="card-icon">❌</div>
+      <h3>O Pattern (Wrong)</h3>
+      <p>If all four wheels are the same type, the rollers form an "O". The robot can still <strong>rotate</strong> but will <strong>struggle to strafe</strong> — the lateral forces cancel instead of adding.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- PROS/CONS -->
+
+<section id="proscons">
+  <span class="section-tag">Section 05</span>
+  <h2>Pros &amp; Cons</h2>
+  <p>Mecanum wheels are powerful but come with real trade-offs. Know them before your build season starts.</p>
+  <div class="pros-cons-grid reveal">
+    <div class="pc-card pros">
+      <h3>Advantages</h3>
+      <ul class="pc-list">
+        <li><span>⚡</span><span><strong>Agility</strong> — Line up for a shot without backing up and turning. Save precious seconds during matches.</span></li>
+        <li><span>🎯</span><span><strong>Precision</strong> — Combined with encoders, move exactly 12.5 inches sideways to the millimeter.</span></li>
+        <li><span>📐</span><span><strong>Space efficiency</strong> — Navigate through gaps only 1 inch wider than your robot.</span></li>
+      </ul>
+    </div>
+    <div class="pc-card cons">
+      <h3>Trade-offs</h3>
+      <ul class="pc-list">
+        <li><span>⚖️</span><span><strong>Weight</strong> — Mecanum wheels are significantly heavier than standard traction wheels.</span></li>
+        <li><span>💪</span><span><strong>Traction</strong> — Rollers spin freely, reducing pushing power. A 6WD robot pinning you to the wall will likely win.</span></li>
+        <li><span>💻</span><span><strong>Complex code</strong> — Requires four independent motor controllers and a specific math formula.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- HARDWARE TIPS -->
+
+<section id="hardware">
+  <span class="section-tag">Section 06</span>
+  <h2>Hardware Tips</h2>
+  <div class="tips-grid reveal">
+    <div class="tip-card">
+      <h4>🔧 Suspension / Flex</h4>
+      <p>All 4 wheels must have equal pressure on the floor. A chassis warped just 1mm can cause one wheel to lift — your strafing will drift or arc unpredictably.</p>
+    </div>
+    <div class="tip-card">
+      <h4>⚙️ Gear Ratios</h4>
+      <p>Strafing fights internal friction. Recommended: <strong>19.2:1 (~312 RPM)</strong> or <strong>13.7:1 (~435 RPM)</strong> for a standard 4" Mecanum setup.</p>
+    </div>
+    <div class="tip-card">
+      <h4>⚖️ Weight Distribution</h4>
+      <p>Keep your Center of Gravity (CoG) centered over all 4 wheels. A rear-heavy robot will <strong>fishtail</strong> when strafing at speed.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- CODE -->
+
+<section id="code">
+  <span class="section-tag">Section 07</span>
+  <h2>Programming Math</h2>
+  <p>The standard Mecanum drive formula uses three input axes: <strong>y</strong> (forward/back), <strong>x</strong> (strafe), and <strong>rx</strong> (rotation). The x input is scaled by 1.1 to counteract imperfect strafing.</p>
+
+  <div class="code-block reveal">
+    <pre>
+<span class="cm">// ─── Mecanum Drive Formula ─────────────────────────────────────</span>
+<span class="cm">// y  = left stick Y  (forward/backward)   range: [-1, 1]</span>
+<span class="cm">// x  = left stick X  (strafe left/right)  range: [-1, 1]</span>
+<span class="cm">// rx = right stick X (rotation)           range: [-1, 1]</span>
+
+<span class="kw">double</span> <span class="vr">denominator</span> = Math.<span class="fn">max</span>(Math.<span class="fn">abs</span>(<span class="vr">y</span>) + Math.<span class="fn">abs</span>(<span class="vr">x</span>) * <span class="nm">1.1</span> + Math.<span class="fn">abs</span>(<span class="vr">rx</span>), <span class="nm">1</span>);
+
+<span class="vr">frontLeftPower</span>  = (<span class="vr">y</span> + <span class="vr">x</span> * <span class="nm">1.1</span> + <span class="vr">rx</span>) / <span class="vr">denominator</span>;
+<span class="vr">backLeftPower</span>   = (<span class="vr">y</span> - <span class="vr">x</span> * <span class="nm">1.1</span> + <span class="vr">rx</span>) / <span class="vr">denominator</span>;
+<span class="vr">frontRightPower</span> = (<span class="vr">y</span> - <span class="vr">x</span> * <span class="nm">1.1</span> - <span class="vr">rx</span>) / <span class="vr">denominator</span>;
+<span class="vr">backRightPower</span>  = (<span class="vr">y</span> + <span class="vr">x</span> * <span class="nm">1.1</span> - <span class="vr">rx</span>) / <span class="vr">denominator</span>;
+
+<span class="cm">// The denominator ensures no motor exceeds 100% power</span>
+<span class="cm">// while maintaining the ratio between all four motors.</span></pre>
+
+  </div>
+
+  <div class="formula-demo reveal">
+    <p style="font-family:'Bebas Neue',sans-serif; font-size:1.2rem; letter-spacing:1px; color:var(--text); margin-bottom:1.2rem;">LIVE FORMULA PLAYGROUND</p>
+    <div class="slider-row">
+      <label>Y (Fwd)</label>
+      <input type="range" id="slY" min="-100" max="100" value="0">
+      <span class="slider-val" id="valY">0.00</span>
+    </div>
+    <div class="slider-row">
+      <label>X (Strafe)</label>
+      <input type="range" id="slX" min="-100" max="100" value="0">
+      <span class="slider-val" id="valX">0.00</span>
+    </div>
+    <div class="slider-row">
+      <label>RX (Rotate)</label>
+      <input type="range" id="slRX" min="-100" max="100" value="0">
+      <span class="slider-val" id="valRX">0.00</span>
+    </div>
+    <div class="formula-result" id="formulaResult"></div>
+  </div>
+</section>
+
+<footer>
+  MECANUM WHEELS — FTC ROBOTICS EDUCATION &nbsp;|&nbsp; INTERACTIVE LEARNING TOOL
+</footer>
+
+<script>
+// ─── SIMULATOR ────────────────────────────────────────────────────
+
+const MOVES = {
+  forward:      { fl: 1,  fr: 1,  bl: 1,  br: 1  },
+  backward:     { fl:-1,  fr:-1,  bl:-1,  br:-1  },
+  strafe_left:  { fl:-1,  fr: 1,  bl: 1,  br:-1  },
+  strafe_right: { fl: 1,  fr:-1,  bl:-1,  br: 1  },
+  turn_left:    { fl:-1,  fr: 1,  bl:-1,  br: 1  },
+  turn_right:   { fl: 1,  fr:-1,  bl: 1,  br:-1  },
+  stop:         { fl: 0,  fr: 0,  bl: 0,  br: 0  },
+};
+
+const MOTOR_LABELS = { fl:'Front Left', fr:'Front Right', bl:'Back Left', br:'Back Right' };
+
+let currentMove = 'stop';
+let animFrame = null;
+let robotAngle = 0;
+let robotX = 180, robotY = 180;
+let robotVX = 0, robotVY = 0;
+
+// Build motor display
+const motorDisplay = document.getElementById('motorDisplay');
+Object.keys(MOTOR_LABELS).forEach(k => {
+  motorDisplay.innerHTML += `
+    <div class="motor-card">
+      <div class="motor-label">${MOTOR_LABELS[k]}</div>
+      <div class="motor-bar-wrap">
+        <div class="motor-bar" id="bar_${k}" style="width:50%;left:50%;"></div>
+      </div>
+      <div class="motor-val" id="val_${k}">0.00</div>
+    </div>`;
+});
+
+function updateMotors(move) {
+  const m = MOVES[move] || MOVES.stop;
+  Object.keys(m).forEach(k => {
+    const v = m[k];
+    const pct = Math.abs(v) * 40; // max 40% width from center
+    const bar = document.getElementById('bar_' + k);
+    const val = document.getElementById('val_' + k);
+    if (v >= 0) {
+      bar.style.left = '50%';
+      bar.style.width = pct + '%';
+      bar.style.background = v === 0 ? '#2a2f3d' : '#7fff6e';
+    } else {
+      bar.style.left = (50 - pct) + '%';
+      bar.style.width = pct + '%';
+      bar.style.background = '#ff4d6d';
+    }
+    val.style.color = v > 0 ? '#7fff6e' : v < 0 ? '#ff4d6d' : '#6b7494';
+    val.textContent = (v >= 0 ? '+' : '') + v.toFixed(2);
+  });
+}
+
+// Canvas robot
+const canvas = document.getElementById('robotCanvas');
+const ctx = canvas.getContext('2d');
+
+function drawRobot() {
+  ctx.clearRect(0, 0, 360, 360);
+
+  // background grid
+  ctx.strokeStyle = 'rgba(0,229,255,0.05)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 360; i += 30) {
+    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 360); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(360, i); ctx.stroke();
+  }
+
+  const m = MOVES[currentMove] || MOVES.stop;
+
+  // update robot position
+  const spd = 1.4;
+  if (currentMove === 'forward')      { robotY -= spd; }
+  if (currentMove === 'backward')     { robotY += spd; }
+  if (currentMove === 'strafe_left')  { robotX -= spd; }
+  if (currentMove === 'strafe_right') { robotX += spd; }
+  if (currentMove === 'turn_left')    { robotAngle -= 1.5; }
+  if (currentMove === 'turn_right')   { robotAngle += 1.5; }
+
+  // wrap
+  robotX = ((robotX - 30) % 300 + 300) % 300 + 30;
+  robotY = ((robotY - 30) % 300 + 300) % 300 + 30;
+
+  ctx.save();
+  ctx.translate(robotX, robotY);
+  ctx.rotate(robotAngle * Math.PI / 180);
+
+  // robot body
+  ctx.fillStyle = '#1a1e28';
+  ctx.strokeStyle = '#00e5ff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(-38, -48, 76, 96, 8);
+  ctx.fill(); ctx.stroke();
+
+  // front indicator
+  ctx.fillStyle = '#00e5ff';
+  ctx.fillRect(-20, -46, 40, 6);
+
+  // wheels
+  const wPos = [[-44,-36],[44,-36],[-44,36],[44,36]];
+  const wKeys = ['fl','fr','bl','br'];
+  wPos.forEach(([wx, wy], i) => {
+    const v = m[wKeys[i]];
+    ctx.save();
+    ctx.translate(wx, wy);
+    // wheel body
+    ctx.fillStyle = '#0a0c10';
+    ctx.strokeStyle = v > 0 ? '#7fff6e' : v < 0 ? '#ff4d6d' : '#2a2f3d';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(-8, -18, 16, 36, 4);
+    ctx.fill(); ctx.stroke();
+
+    // rollers at 45°
+    const sign = (wKeys[i] === 'fl' || wKeys[i] === 'br') ? 1 : -1;
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 1.5;
+    for (let r = -12; r <= 12; r += 8) {
+      ctx.save();
+      ctx.translate(0, r);
+      ctx.rotate(sign * 45 * Math.PI / 180);
+      ctx.beginPath();
+      ctx.moveTo(-7, 0); ctx.lineTo(7, 0);
+      ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
+  });
+
+  // movement arrow
+  if (currentMove !== 'stop') {
+    ctx.strokeStyle = 'rgba(0,229,255,0.6)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4,4]);
+    // show vector
+    const arrowMap = {
+      forward: [0,-30], backward:[0,30],
+      strafe_left:[-30,0], strafe_right:[30,0],
+      turn_left:[0,0], turn_right:[0,0]
+    };
+    const [ax,ay] = arrowMap[currentMove] || [0,0];
+    if (ax !== 0 || ay !== 0) {
+      ctx.beginPath();
+      ctx.moveTo(0,0); ctx.lineTo(ax,ay);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+
+  ctx.restore();
+
+  animFrame = requestAnimationFrame(drawRobot);
+}
+
+// button events
+document.querySelectorAll('.mv-btn:not(.spacer)').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentMove = btn.dataset.move;
+    if (currentMove === 'stop') { robotAngle = 0; }
+    document.querySelectorAll('.mv-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    updateMotors(currentMove);
+  });
+});
+
+updateMotors('stop');
+drawRobot();
+
+// ─── X / O PATTERN CANVASES ──────────────────────────────────────
+
+function drawPattern(canvasId, isX) {
+  const c = document.getElementById(canvasId);
+  const cx = c.getContext('2d');
+  const W = 200;
+
+  cx.fillStyle = '#12151c';
+  cx.fillRect(0,0,W,W);
+
+  // robot outline
+  cx.strokeStyle = isX ? '#00e5ff' : '#ff4d6d';
+  cx.lineWidth = 1.5;
+  cx.strokeRect(50,40,100,120);
+
+  // label top
+  cx.fillStyle = isX ? '#00e5ff' : '#ff4d6d';
+  cx.font = '10px Space Mono, monospace';
+  cx.textAlign = 'center';
+  cx.fillText('TOP VIEW', 100, 22);
+
+  // 4 wheel positions: [x,y, angle]
+  // X pattern: FL=/, FR=\, BL=\, BR=/
+  // O pattern: all same
+  const wheels = [
+    { x: 44,  y: 70,  sign: isX ? 1 : 1  }, // FL
+    { x: 156, y: 70,  sign: isX ? -1 : 1 }, // FR
+    { x: 44,  y: 130, sign: isX ? -1 : 1 }, // BL
+    { x: 156, y: 130, sign: isX ? 1 : 1  }, // BR
+  ];
+
+  wheels.forEach(w => {
+    cx.save();
+    cx.translate(w.x, w.y);
+    cx.fillStyle = '#0a0c10';
+    cx.strokeStyle = '#6b7494';
+    cx.lineWidth = 1;
+    cx.beginPath();
+    cx.roundRect(-8,-16,16,32,3);
+    cx.fill(); cx.stroke();
+
+    // rollers
+    cx.strokeStyle = isX ? 'rgba(0,229,255,0.7)' : 'rgba(255,77,109,0.7)';
+    cx.lineWidth = 2;
+    for (let r=-10; r<=10; r+=8) {
+      cx.save();
+      cx.translate(0,r);
+      cx.rotate(w.sign * 45 * Math.PI/180);
+      cx.beginPath(); cx.moveTo(-6,0); cx.lineTo(6,0); cx.stroke();
+      cx.restore();
+    }
+    cx.restore();
+  });
+
+  // draw X or O indicator
+  if (isX) {
+    cx.strokeStyle = 'rgba(127,255,110,0.25)';
+    cx.lineWidth = 1.5;
+    cx.setLineDash([3,3]);
+    cx.beginPath(); cx.moveTo(50,40);  cx.lineTo(150,160); cx.stroke();
+    cx.beginPath(); cx.moveTo(150,40); cx.lineTo(50,160);  cx.stroke();
+    cx.setLineDash([]);
+    cx.fillStyle = '#7fff6e';
+    cx.font = 'bold 28px Bebas Neue';
+    cx.fillText('X', 100, 108);
+  } else {
+    cx.strokeStyle = 'rgba(255,77,109,0.25)';
+    cx.lineWidth = 1.5;
+    cx.setLineDash([3,3]);
+    cx.beginPath();
+    cx.arc(100, 100, 42, 0, Math.PI*2);
+    cx.stroke();
+    cx.setLineDash([]);
+    cx.fillStyle = '#ff4d6d';
+    cx.font = 'bold 28px Bebas Neue';
+    cx.fillText('O', 100, 108);
+  }
+}
+
+drawPattern('xCanvas', true);
+drawPattern('oCanvas', false);
+
+// ─── FORMULA PLAYGROUND ──────────────────────────────────────────
+
+const motorNames = ['Front Left', 'Front Right', 'Back Left', 'Back Right'];
+const motorKeys  = ['fl', 'fr', 'bl', 'br'];
+
+function calcFormula() {
+  const y  = document.getElementById('slY').value / 100;
+  const x  = document.getElementById('slX').value / 100;
+  const rx = document.getElementById('slRX').value / 100;
+
+  document.getElementById('valY').textContent  = y.toFixed(2);
+  document.getElementById('valX').textContent  = x.toFixed(2);
+  document.getElementById('valRX').textContent = rx.toFixed(2);
+
+  const den = Math.max(Math.abs(y) + Math.abs(x)*1.1 + Math.abs(rx), 1);
+  const powers = [
+    (y + x*1.1 + rx) / den,
+    (y - x*1.1 - rx) / den,
+    (y - x*1.1 + rx) / den,
+    (y + x*1.1 - rx) / den,
+  ];
+
+  const res = document.getElementById('formulaResult');
+  res.innerHTML = '';
+  powers.forEach((p, i) => {
+    const col = p > 0.05 ? '#7fff6e' : p < -0.05 ? '#ff4d6d' : '#6b7494';
+    res.innerHTML += `
+      <div class="result-motor">
+        <div class="label">${motorNames[i]}</div>
+        <div class="val" style="color:${col}">${p >= 0 ? '+' : ''}${p.toFixed(3)}</div>
+      </div>`;
+  });
+}
+
+['slY','slX','slRX'].forEach(id => {
+  document.getElementById(id).addEventListener('input', calcFormula);
+});
+calcFormula();
+
+// ─── SCROLL REVEAL ───────────────────────────────────────────────
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('visible'); }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
