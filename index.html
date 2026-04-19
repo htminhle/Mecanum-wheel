@@ -263,6 +263,17 @@ border-color: var(–accent);
 box-shadow: 0 0 14px rgba(0,229,255,0.35);
 }
 .mv-btn.spacer { visibility: hidden; }
+.mv-btn.diag {
+border-color: rgba(255,209,102,0.35);
+color: var(–gold);
+}
+.mv-btn.diag:hover { border-color: var(–gold); color: var(–gold); background: rgba(255,209,102,0.08); }
+.mv-btn.diag.active {
+background: var(–gold);
+color: #000;
+border-color: var(–gold);
+box-shadow: 0 0 14px rgba(255,209,102,0.4);
+}
 
 /* Robot canvas */
 #robotCanvas {
@@ -638,15 +649,19 @@ font-size: 0.95rem;
     <div class="sim-layout">
       <div>
         <div class="movement-btns" id="mvBtns">
-          <button class="mv-btn spacer">·</button>
+          <button class="mv-btn diag" data-move="diag_fl">↖ Diag FL</button>
           <button class="mv-btn" data-move="forward">▲ Forward</button>
-          <button class="mv-btn spacer">·</button>
+          <button class="mv-btn diag" data-move="diag_fr">↗ Diag FR</button>
           <button class="mv-btn" data-move="strafe_left">◄ Strafe L</button>
           <button class="mv-btn" data-move="stop">■ Stop</button>
           <button class="mv-btn" data-move="strafe_right">Strafe R ►</button>
-          <button class="mv-btn" data-move="turn_left">↺ Turn L</button>
+          <button class="mv-btn diag" data-move="diag_bl">↙ Diag BL</button>
           <button class="mv-btn" data-move="backward">▼ Back</button>
-          <button class="mv-btn" data-move="turn_right">Turn R ↻</button>
+          <button class="mv-btn diag" data-move="diag_br">↘ Diag BR</button>
+        </div>
+        <div style="display:flex;gap:0.6rem;margin-bottom:1.5rem;">
+          <button class="mv-btn" data-move="turn_left" style="flex:1">↺ Turn L</button>
+          <button class="mv-btn" data-move="turn_right" style="flex:1">Turn R ↻</button>
         </div>
         <div class="motors-grid" id="motorDisplay"></div>
       </div>
@@ -717,6 +732,34 @@ font-size: 0.95rem;
           <td class="fwd">▶ Forward</td>
           <td class="rev">◀ Reverse</td>
           <td class="fwd">▶ Forward</td>
+          <td class="rev">◀ Reverse</td>
+        </tr>
+        <tr>
+          <td class="dir-cell" style="color:var(--gold)">↗ Diagonal FR</td>
+          <td class="fwd">▶ Forward</td>
+          <td style="color:var(--muted)">— Stop</td>
+          <td style="color:var(--muted)">— Stop</td>
+          <td class="fwd">▶ Forward</td>
+        </tr>
+        <tr>
+          <td class="dir-cell" style="color:var(--gold)">↖ Diagonal FL</td>
+          <td style="color:var(--muted)">— Stop</td>
+          <td class="fwd">▶ Forward</td>
+          <td class="fwd">▶ Forward</td>
+          <td style="color:var(--muted)">— Stop</td>
+        </tr>
+        <tr>
+          <td class="dir-cell" style="color:var(--gold)">↘ Diagonal BR</td>
+          <td style="color:var(--muted)">— Stop</td>
+          <td class="rev">◀ Reverse</td>
+          <td class="rev">◀ Reverse</td>
+          <td style="color:var(--muted)">— Stop</td>
+        </tr>
+        <tr>
+          <td class="dir-cell" style="color:var(--gold)">↙ Diagonal BL</td>
+          <td class="rev">◀ Reverse</td>
+          <td style="color:var(--muted)">— Stop</td>
+          <td style="color:var(--muted)">— Stop</td>
           <td class="rev">◀ Reverse</td>
         </tr>
       </tbody>
@@ -872,6 +915,11 @@ const MOVES = {
   strafe_right: { fl: 1,  fr:-1,  bl:-1,  br: 1  },
   turn_left:    { fl:-1,  fr: 1,  bl:-1,  br: 1  },
   turn_right:   { fl: 1,  fr:-1,  bl: 1,  br:-1  },
+  // Diagonal moves: one wheel idle per pair
+  diag_fr:      { fl: 1,  fr: 0,  bl: 0,  br: 1  }, // ↗ Front-Right diagonal
+  diag_fl:      { fl: 0,  fr: 1,  bl: 1,  br: 0  }, // ↖ Front-Left diagonal
+  diag_br:      { fl: 0,  fr:-1,  bl:-1,  br: 0  }, // ↘ Back-Right diagonal
+  diag_bl:      { fl:-1,  fr: 0,  bl: 0,  br:-1  }, // ↙ Back-Left diagonal
   stop:         { fl: 0,  fr: 0,  bl: 0,  br: 0  },
 };
 
@@ -936,12 +984,17 @@ function drawRobot() {
 
   // update robot position
   const spd = 1.4;
+  const diagSpd = spd * 0.707; // sin(45°) ≈ 0.707
   if (currentMove === 'forward')      { robotY -= spd; }
   if (currentMove === 'backward')     { robotY += spd; }
   if (currentMove === 'strafe_left')  { robotX -= spd; }
   if (currentMove === 'strafe_right') { robotX += spd; }
   if (currentMove === 'turn_left')    { robotAngle -= 1.5; }
   if (currentMove === 'turn_right')   { robotAngle += 1.5; }
+  if (currentMove === 'diag_fr')      { robotX += diagSpd; robotY -= diagSpd; }
+  if (currentMove === 'diag_fl')      { robotX -= diagSpd; robotY -= diagSpd; }
+  if (currentMove === 'diag_br')      { robotX += diagSpd; robotY += diagSpd; }
+  if (currentMove === 'diag_bl')      { robotX -= diagSpd; robotY += diagSpd; }
 
   // wrap
   robotX = ((robotX - 30) % 300 + 300) % 300 + 30;
@@ -1003,7 +1056,9 @@ function drawRobot() {
     const arrowMap = {
       forward: [0,-30], backward:[0,30],
       strafe_left:[-30,0], strafe_right:[30,0],
-      turn_left:[0,0], turn_right:[0,0]
+      turn_left:[0,0], turn_right:[0,0],
+      diag_fr:[22,-22], diag_fl:[-22,-22],
+      diag_br:[22,22],  diag_bl:[-22,22]
     };
     const [ax,ay] = arrowMap[currentMove] || [0,0];
     if (ax !== 0 || ay !== 0) {
@@ -1020,6 +1075,20 @@ function drawRobot() {
 }
 
 // button events
+const MOVE_PRESETS = {
+  forward:      { y: 100, x: 0,   rx: 0  },
+  backward:     { y:-100, x: 0,   rx: 0  },
+  strafe_left:  { y: 0,   x:-100, rx: 0  },
+  strafe_right: { y: 0,   x: 100, rx: 0  },
+  turn_left:    { y: 0,   x: 0,   rx:-100},
+  turn_right:   { y: 0,   x: 0,   rx: 100},
+  diag_fr:      { y: 71,  x: 71,  rx: 0  },
+  diag_fl:      { y: 71,  x:-71,  rx: 0  },
+  diag_br:      { y:-71,  x: 71,  rx: 0  },
+  diag_bl:      { y:-71,  x:-71,  rx: 0  },
+  stop:         { y: 0,   x: 0,   rx: 0  },
+};
+
 document.querySelectorAll('.mv-btn:not(.spacer)').forEach(btn => {
   btn.addEventListener('click', () => {
     currentMove = btn.dataset.move;
@@ -1027,6 +1096,14 @@ document.querySelectorAll('.mv-btn:not(.spacer)').forEach(btn => {
     document.querySelectorAll('.mv-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     updateMotors(currentMove);
+    // sync formula sliders
+    const p = MOVE_PRESETS[currentMove];
+    if (p) {
+      document.getElementById('slY').value  = p.y;
+      document.getElementById('slX').value  = p.x;
+      document.getElementById('slRX').value = p.rx;
+      calcFormula();
+    }
   });
 });
 
